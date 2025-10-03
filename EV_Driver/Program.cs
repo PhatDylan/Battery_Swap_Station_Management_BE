@@ -29,14 +29,14 @@ builder.Services.AddCors(options =>
 
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
-<<<<<<< HEAD
+//<<<<<<< HEAD
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-=======
+//=======
 builder.Services.AddScoped<IBookingService, BookingService>();
 // Uncomment if you have BatterySwapService
 // builder.Services.AddScoped<IBatterySwapService, BatterySwapService>();
->>>>>>> fd951b34f67a65aa965bfa7a74835b0380a1ee2b
+//>>>>>>> fd951b34f67a65aa965bfa7a74835b0380a1ee2b
 
 // Add JWT authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

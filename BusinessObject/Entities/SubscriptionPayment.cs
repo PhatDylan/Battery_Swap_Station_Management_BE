@@ -1,0 +1,36 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using BusinessObject.Enums;
+
+namespace BusinessObject.Entities;
+
+[Table("SubscriptionPayment")]
+public class SubscriptionPayment
+{
+    [Key] [Column("sub_pay_id")] public string SubPayId { get; set; } = Guid.NewGuid().ToString();
+
+    [Required] [Column("subscription_id")] public string SubscriptionId { get; set; } = string.Empty;
+
+    [Required]
+    [Column("order_code")]
+    [StringLength(255)]
+    public string OrderCode { get; set; } = string.Empty;
+
+    [Column("amount")] public double Amount { get; set; }
+
+    [Column("currency")]
+    [StringLength(10)]
+    public string Currency { get; set; } = "VND";
+
+    [Column("payment_method")] public PayMethod PaymentMethod { get; set; } = PayMethod.Card;
+
+    [Column("status")] public PayStatus Status { get; set; } = PayStatus.Pending;
+    
+    [Column ("payment_url")] public string? PaymentUrl { get; set; } = string.Empty;
+
+    [Column("created_at")] public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Foreign key navigation properties
+
+    [ForeignKey("SubscriptionId")] public virtual Subscription Subscription { get; set; } = null!;
+}

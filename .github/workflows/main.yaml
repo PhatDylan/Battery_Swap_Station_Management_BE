@@ -1,0 +1,77 @@
+name: Build and Deploy
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  api-image-build:
+    name: Build / API
+    runs-on: ubuntu-22.04
+    permissions: 
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Develop
+        uses: actions/checkout@v3
+
+      - name: DockerHub Login
+        uses: docker/login-action@v3.1.0
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+      - name: Lowercase repository name
+        run: |
+            REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+            echo "REGISTRY=ghcr.io/$REPO_LOWER" >> $GITHUB_ENV
+      - name: Build Image And Push
+        run: |
+          docker compose -f .docker/compose.yaml build ev-api
+          docker compose -f .docker/compose.yaml push ev-api
+  api-deploy:
+    name: Deploy / API
+    runs-on: [self-hosted, kiet-swp, linux, x64]
+    needs: api-image-build
+    permissions:
+      contents: read
+      packages: write
+    env:
+      DB_HOST: ${{secrets.DB_HOST}}
+      DB_USERNAME: ${{secrets.DB_USERNAME}}
+      DB_PASSWORD: ${{secrets.DB_PASSWORD}}
+      REDIS_HOST: ${{secrets.REDIS_HOST}}
+      JWT_KEY: ${{secrets.JWT_KEY}}
+      JWT_EXPIRY_IN_HOURS: ${{secrets.JWT_EXPIRY_IN_HOURS}}
+      EMAIL_FROM: ${{secrets.EMAIL_FROM}}
+      EMAIL_USER: ${{secrets.EMAIL_USER}}
+      EMAIL_PASSWORD: ${{secrets.EMAIL_PASSWORD}}
+      CLOUDINARY_CLOUD_NAME: ${{secrets.CLOUDINARY_CLOUD_NAME}}
+      CLOUDINARY_API_KEY: ${{secrets.CLOUDINARY_API_KEY}}
+      CLOUDINARY_API_SECRET: ${{secrets.CLOUDINARY_API_SECRET}}
+      PAYOS_CLIENT_ID: ${{secrets.PAYOS_CLIENT_ID}}
+      PAYOS_API_KEY: ${{secrets.PAYOS_API_KEY}}
+      PAYOS_CHECKSUM_KEY: ${{secrets.PAYOS_CHECKSUM_KEY}}
+      BOOKING_REDIRECT_URL: ${{secrets.BOOKING_REDIRECT_URL}}
+      SUBSCRIPTION_REDIRECT_URL: ${{secrets.SUBSCRIPTION_REDIRECT_URL}}
+    steps:
+      - name: Checkout Develop
+        uses: actions/checkout@v3
+
+      - name: DockerHub Login
+        uses: docker/login-action@v3.1.0
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+      - name: Lowercase repository name
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "REGISTRY=ghcr.io/$REPO_LOWER" >> $GITHUB_ENV
+      - name: Pull Image From Registry
+        run: |
+          docker compose -f .docker/compose.yaml pull ev-api
+      - name: Deploy Image
+        run: |
+          docker compose -f .docker/compose.yaml -p battery-swap up -d ev-api
+      - name: Cleanup Docker Images
+        run: docker image prune -af

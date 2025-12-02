@@ -1,0 +1,52 @@
+services:
+  ev-database:
+    container_name: ev-database
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${DB_PASSWORD}
+      - MSSQL_PID=Express
+    networks:
+      - ev-network
+    volumes:
+      - ev-database-data:/var/opt/mssql/data
+  
+  ev-api:
+    container_name: ev-api
+    image: ${REGISTRY}/ev-api:latest
+    restart: always
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=${DB_HOST};Database=EV_DriverDB;User Id=${DB_USERNAME};Password=${DB_PASSWORD};TrustServerCertificate=true;"
+      JwtSettings__Key: ${JWT_KEY}
+      JwtSettings__Issuer: EV_Driver_API
+      JwtSettings__Audience: EV_Driver_Client
+      JwtSettings__ExpiryInHours: ${JWT_EXPIRY_IN_HOURS}
+      Email__From: ${EMAIL_FROM}
+      Email__SmtpHost: smtp.gmail.com
+      Email__SmtpPort: 587
+      Email__EnableSsl: true
+      Email__User: ${EMAIL_USER}
+      Email__Password: ${EMAIL_PASSWORD}
+      CloudinarySettings__CloudName: ${CLOUDINARY_CLOUD_NAME}
+      CloudinarySettings__ApiKey: ${CLOUDINARY_API_KEY}
+      CloudinarySettings__ApiSecret: ${CLOUDINARY_API_SECRET}
+      PayOSSetting__ClientId: ${PAYOS_CLIENT_ID}
+      PayOSSetting__ApiKey: ${PAYOS_API_KEY}
+      PayOSSetting__ChecksumKey: ${PAYOS_CHECKSUM_KEY}
+      Logging__LogLevel__Default: Information
+      Logging__LogLevel__Microsoft.AspNetCore: Warning
+      AllowedHosts: "*"
+    build:
+      context: ..
+      dockerfile: EV_Driver/Dockerfile
+    networks:
+      - ev-network
+
+networks:
+  ev-network:
+    name: ev-network
+
+volumes:
+  ev-database-data:
+    name: ev-database-data

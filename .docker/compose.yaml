@@ -1,0 +1,41 @@
+services:
+  ev-api:
+    container_name: ev-api
+    image: ${REGISTRY}/ev-api:latest
+    restart: always
+    build: 
+      context: ..
+      dockerfile: EV_Driver/Dockerfile
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=${DB_HOST};Database=EV_DriverDB;User Id=${DB_USERNAME};Password=${DB_PASSWORD};TrustServerCertificate=true;"
+      ConnectionStrings__RedisConnection: "${REDIS_HOST}:6379"
+      JwtSettings__Key: ${JWT_KEY}
+      JwtSettings__Issuer: EV_Driver_API
+      JwtSettings__Audience: EV_Driver_Client
+      JwtSettings__ExpiryInHours: ${JWT_EXPIRY_IN_HOURS}
+      Email__From: ${EMAIL_FROM}
+      Email__SmtpHost: smtp.gmail.com
+      Email__SmtpPort: 587
+      Email__EnableSsl: true
+      Email__User: ${EMAIL_USER}
+      Email__Password: ${EMAIL_PASSWORD}
+      CloudinarySettings__CloudName: ${CLOUDINARY_CLOUD_NAME}
+      CloudinarySettings__ApiKey: ${CLOUDINARY_API_KEY}
+      CloudinarySettings__ApiSecret: ${CLOUDINARY_API_SECRET}
+      PayOSSetting__ClientId: ${PAYOS_CLIENT_ID}
+      PayOSSetting__ApiKey: ${PAYOS_API_KEY}
+      PayOSSetting__ChecksumKey: ${PAYOS_CHECKSUM_KEY}
+      Booking__TimeRangeHour: ${BOOKING_TIME_RANGE_HOUR:-1}
+      Booking__BatteryPercentageMin: ${BOOKING_BATTERY_PERCENTAGE_MIN:-0.9}
+      Booking__Surcharge: ${BOOKING_SURCHARGE:-30000}
+      Booking__RedirectUrl: ${BOOKING_REDIRECT_URL:-http://localhost:5173/staff/swap/payment}
+      Subscription__RedirectUrl: ${SUBSCRIPTION_REDIRECT_URL:-http://localhost:5173/driver/subscription/payment}
+      Logging__LogLevel__Default: Information
+      Logging__LogLevel__Microsoft.AspNetCore: Warning
+      AllowedHosts: "*"
+    networks:
+      - ev-network
+networks:
+  ev-network:
+    name: ev-network
+    external: true
